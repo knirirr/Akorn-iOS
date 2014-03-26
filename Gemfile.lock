@@ -1,11 +1,3 @@
-GIT
-  remote: https://github.com/pachun/Courier
-  revision: b9436ab26ddb69832d9bf4b562e72d745adc1563
-  specs:
-    motion-courier (0.0.5)
-      bubble-wrap (>= 1.4.0)
-      motion-support (>= 0.2.6)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -82,14 +74,20 @@ GEM
     motion-cocoapods (1.4.0)
       cocoapods (>= 0.26.2)
     motion-require (0.2.0)
+    motion-settings-bundle (0.3.0)
+      plist (~> 3.1.0)
     motion-support (0.2.6)
       motion-require (>= 0.0.6)
+    motion_model (0.5.1)
+      bubble-wrap (>= 1.3.0)
+      motion-support (>= 0.1.0)
     multi_json (1.9.0)
     multi_test (0.0.3)
     nap (0.6.0)
     open4 (1.3.3)
     parslet (1.4.0)
       blankslate (~> 2.0)
+    plist (3.1.0)
     rack (1.5.2)
     rack-protection (1.5.2)
       rack
@@ -131,5 +129,6 @@ DEPENDENCIES
   bubble-wrap
   motion-calabash
   motion-cocoapods
-  motion-courier (~> 0.0.5)!
+  motion-settings-bundle
+  motion_model
   rake

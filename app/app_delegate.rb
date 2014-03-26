@@ -1,8 +1,6 @@
 class AppDelegate
-  C = Courier::Courier.instance
 
   def application(application, didFinishLaunchingWithOptions:launchOptions)
-    C.parcels = [Article, Journal, Filter]
 
     # the left drawer will show the list of filters, as in Android, the right will show various controls,
     # replacing the Android app's 3-dot overflow menu
@@ -15,13 +13,37 @@ class AppDelegate
     drawer_controller = MMDrawerController.alloc.initWithCenterViewController(main_nav_controller,
                                                                              leftDrawerViewController: left_nav_controller,
                                                                              rightDrawerViewController: right_nav_controller)
+    UINavigationBar.appearance.barTintColor = '#00a56d'.to_color
+    UINavigationBar.appearance.setTitleTextAttributes({
+      UITextAttributeFont => UIFont.fontWithName('Helvetica Neue', size:24),
+      UITextAttributeTextShadowColor => UIColor.colorWithWhite(0.0, alpha:0.4),
+      UITextAttributeTextColor => UIColor.whiteColor
+    })
+    UINavigationBar.appearance.tintColor = UIColor.whiteColor # white buttons
 
     # finally...
     @window = UIWindow.alloc.initWithFrame(UIScreen.mainScreen.bounds)
     @window.rootViewController = drawer_controller
     @window.makeKeyAndVisible
 
+    # get some data
+    puts 'Loading data!'
+    Article.deserialize_from_file('akorn_articles.dat')
+    Filter.deserialize_from_file('akorn_filters.dat')
+    Journal.deserialize_from_file('akorn_journals.dat')
+
     true
   end
+
+
+
+
+  def applicationDidEnterBackground(application)
+    Article.serialize_to_file('akorn_articles.dat')
+    Filter.serialize_to_file('akorn_filters.dat')
+    Journal.serialize_to_file('akorn_journals.dat')
+    puts 'Data saved!'
+  end
+
 
 end
