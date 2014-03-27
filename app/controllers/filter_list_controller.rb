@@ -24,7 +24,7 @@ class FilterListController < UIViewController
     @reuse_identifier ||= 'FILTERS_IDENTIFIER'
     cell = tableView.dequeueReusableCellWithIdentifier(@reuse_identifier)
     cell ||= UITableViewCell.alloc.initWithStyle(UITableViewCellStyleSubtitle, reuseIdentifier: @reuse_identifier)
-    cell.textLabel.text = @filters[indexPath.row].full
+    cell.textLabel.text = @filters[indexPath.row].text
     cell.detailTextLabel.text = @filters[indexPath.row].type
     cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
     cell.textLabel.numberOfLines = 0

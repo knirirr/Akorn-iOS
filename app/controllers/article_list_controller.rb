@@ -69,6 +69,8 @@ class ArticleListController < UIViewController
   def reload_search(filter_id)
     @filter_id = filter_id
     puts "Filter id: #{@filter_id}"
+    filters = Filter.find { |filter| filter.search_id == @filter_id }
+    puts "Would display articles for filter: #{filters.first.id}, #{filters.first.search_id}, #{filters.first.text}"
   end
 
   def load_data
@@ -76,12 +78,12 @@ class ArticleListController < UIViewController
     #Dispatch::Queue.main.async {
       @count += 1
       @articles << {:title => "Article ##{@count}", :journal => "Journal ##{@count}"}
-      puts "Articles: #{@articles.inspect}"
+      #puts "Articles: #{@articles.inspect}"
       #output = AkornTasks.sync
       #puts "Got output: #{output}"
       @atask = AkornTasks.new
       @atask.sync
-      puts 'load_data finished!'
+      #puts 'load_data finished!'
       #@table.reloadData
       #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
       #App.delegate.instance_variable_get('@fl_controller').table.reloadData

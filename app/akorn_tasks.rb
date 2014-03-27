@@ -1,6 +1,35 @@
 class AkornTasks
   include BubbleWrap
 
+  # sync latest filters, articles and journals
+  def sync
+    # login first
+    authCookie = self.login
+    url = self.url
+
+    #return if authCookie.nil?
+
+    # get the users filters
+    puts "About to get filters!"
+    HTTP.get("#{url}/searches", {cookie: authCookie}) do |response|
+      filters = JSON.parse(response.body.to_str)
+      if !filters.nil?
+        create_filters(filters)
+      end
+      # having now got the filters the articles for each can be fetched
+      fetch_articles
+      puts "Finished getting searches!"
+      puts "About to reload the tables!"
+      # reload all the tables
+      App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
+      App.delegate.instance_variable_get('@fl_controller').table.reloadData
+      #App.delegate.instance_variable_get('@al_controller').articles = Article.all
+      App.delegate.instance_variable_get('@al_controller').table.reloadData
+      App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      puts 'Sync finished!'
+    end
+  end
+
   # get the login token required for all further posts
   def login
     email = NSUserDefaults.standardUserDefaults['email']
@@ -23,35 +52,14 @@ class AkornTasks
 
   def url
     server_port = NSUserDefaults.standardUserDefaults['server_port']
-    if server_port == 'development'
+    if server_port == 'Development'
       @url = "http://akorn.org:8000/api"
     else
       @url = "http://akorn.org/api"
     end
   end
 
-  # sync latest filters, articles and journals
-  def sync
-    # login first
-    authCookie = self.login
-    url = self.url
-    # get the users filters
-    HTTP.get("#{url}/searches", {cookie: authCookie}) do |response|
-      filters = JSON.parse(response.body.to_str)
-      if !filters.nil?
-        create_filters(filters)
-      end
-    end
-    # having now got the filters the articles for each can be fetched
-    fetch_articles
 
-    # reload all the tables
-    App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
-    App.delegate.instance_variable_get('@fl_controller').table.reloadData
-    App.delegate.instance_variable_get('@al_controller').table.reloadData
-    App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
-    puts 'Sync finished!'
-  end
 
   def create_filters(filters)
     Filter.destroy_all
