@@ -1,4 +1,5 @@
 class FilterListController < UIViewController
+  attr_accessor :table, :filters
 
   def viewDidLoad
     super
@@ -10,10 +11,8 @@ class FilterListController < UIViewController
     @table.dataSource = self
     @table.delegate = self
 
-    @filters = [
-        {:title => 'All articles', :subtitle => 'All articles saved on this device'},
-        {:title => 'Saved articles', :subtitle => 'All articles starred on this device'},
-    ]
+    @filters = Filter.all
+    puts "FL controller loaded #{@filters.length} filters"
 
   end
 
@@ -25,17 +24,25 @@ class FilterListController < UIViewController
     @reuse_identifier ||= 'FILTERS_IDENTIFIER'
     cell = tableView.dequeueReusableCellWithIdentifier(@reuse_identifier)
     cell ||= UITableViewCell.alloc.initWithStyle(UITableViewCellStyleSubtitle, reuseIdentifier: @reuse_identifier)
-    cell.textLabel.text = @filters[indexPath.row][:title]
-    cell.detailTextLabel.text = @filters[indexPath.row][:subtitle]
+    cell.textLabel.text = @filters[indexPath.row].full
+    cell.detailTextLabel.text = @filters[indexPath.row].type
+    cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
+    cell.textLabel.numberOfLines = 0
     cell
   end
 
+  def tableView(tableView, heightForRowAtIndexPath: indexPath)
+    80 # work out a better way of doing this
+  end
+
   def tableView(tableView, didSelectRowAtIndexPath: indexPath)
-    puts "Selected filter: #{@filters[indexPath.row].inspect}"
-    tableView.deselectRowAtIndexPath(indexPath, animated: true)
-    App.window.delegate.toggleDrawerSide MMDrawerSideLeft, animated:true, completion: nil
-    # pass the id of the current filter back to the main activity so it may reload the table
-    App.delegate.instance_variable_get('@al_controller').reload_search(indexPath.row)
+    if !@filters[indexPath.row].nil?
+      puts "Selected filter: #{@filters[indexPath.row].search_id}"
+      tableView.deselectRowAtIndexPath(indexPath, animated: true)
+      App.window.delegate.toggleDrawerSide MMDrawerSideLeft, animated:true, completion: nil
+      # pass the id of the current filter back to the main activity so it may reload the table
+      App.delegate.instance_variable_get('@al_controller').reload_search(@filters[indexPath.row].search_id)
+    end
   end
 
 end

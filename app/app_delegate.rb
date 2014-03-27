@@ -2,6 +2,12 @@ class AppDelegate
 
   def application(application, didFinishLaunchingWithOptions:launchOptions)
 
+    # get some data
+    puts 'Loading data!'
+    Article.deserialize_from_file('akorn_articles.dat')
+    Filter.deserialize_from_file('akorn_filters.dat')
+    Journal.deserialize_from_file('akorn_journals.dat')
+
     # the left drawer will show the list of filters, as in Android, the right will show various controls,
     # replacing the Android app's 3-dot overflow menu
     @al_controller = ArticleListController.alloc.init
@@ -26,16 +32,8 @@ class AppDelegate
     @window.rootViewController = drawer_controller
     @window.makeKeyAndVisible
 
-    # get some data
-    puts 'Loading data!'
-    Article.deserialize_from_file('akorn_articles.dat')
-    Filter.deserialize_from_file('akorn_filters.dat')
-    Journal.deserialize_from_file('akorn_journals.dat')
-
     true
   end
-
-
 
 
   def applicationDidEnterBackground(application)

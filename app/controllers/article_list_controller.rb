@@ -1,5 +1,5 @@
 class ArticleListController < UIViewController
-  attr_accessor :filter_id
+  attr_accessor :filter_id, :table
 
   def viewDidLoad
     super
@@ -53,6 +53,8 @@ class ArticleListController < UIViewController
     cell.textLabel.text = @articles[indexPath.row][:title]
     cell.detailTextLabel.text = @articles[indexPath.row][:journal]
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
+    cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
+    cell.textLabel.numberOfLines = 0
     cell
   end
 
@@ -70,17 +72,21 @@ class ArticleListController < UIViewController
   end
 
   def load_data
-    # this should call a task from AkornTasks instead of the stuff below
-    Dispatch::Queue.main.after(1) {
+    #Dispatch::Queue.main.after(1) {
+    #Dispatch::Queue.main.async {
       @count += 1
-      @articles << {:title => "article ##{@count}", :journal => "Journal ##{@count}"}
+      @articles << {:title => "Article ##{@count}", :journal => "Journal ##{@count}"}
       puts "Articles: #{@articles.inspect}"
-      puts 'Would load data now'
-      output = AkornTasks.sync
-      puts "Got output: #{output}"
-      @table.reloadData
-      @table.pullToRefreshView.stopAnimating
-    }
+      #output = AkornTasks.sync
+      #puts "Got output: #{output}"
+      @atask = AkornTasks.new
+      @atask.sync
+      puts 'load_data finished!'
+      #@table.reloadData
+      #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
+      #App.delegate.instance_variable_get('@fl_controller').table.reloadData
+      #@table.pullToRefreshView.stopAnimating
+    #}
   end
 
 

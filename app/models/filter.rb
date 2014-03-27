@@ -8,7 +8,7 @@ class Filter
           :full => :string,
           :text => :string,
           :type => :string,
-          :term_id => :integer
+          :term_id => :string
 
   has_many :articles
 
