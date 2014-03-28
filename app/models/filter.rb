@@ -5,16 +5,19 @@ class Filter
 
   columns :id => :integer,
           :search_id => :string,
-          :full => :string,
-          :text => :string,
-          :type => :string,
-          :term_id => :string
+          :search_terms => :array
 
   has_many :articles
 
 end
 
 __END__
+
+          # change everything below this to an array type, for multiple-term searches
+          #:full => :string,
+          #:text => :string,
+          #:type => :string,
+          #:term_id => :string
 
   public static final String COLUMN_ID = "_id";
   public static final String COLUMN_SEARCH_ID = "search_id"; // I'm assuming that there's a BSON ID on the server...

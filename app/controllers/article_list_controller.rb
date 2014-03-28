@@ -18,10 +18,11 @@ class ArticleListController < UIViewController
         end
     )
 
-    @articles = [
-        {:title => 'Article #1', :journal => 'Journal #1'},
-    ]
-    @count = 1
+    #@articles = [
+    #    {:title => 'Article #1', :journal => 'Journal #1'},
+    #]
+    #@count = 1
+    @articles = Article.all
 
     # buttons for the drawers
     # The MMDrawerController should be the delegate, so the toggleDrawerSide method is passed
@@ -74,15 +75,17 @@ class ArticleListController < UIViewController
   end
 
   def load_data
+    @atask = AkornTasks.new
+    @atask.sync
     #Dispatch::Queue.main.after(1) {
     #Dispatch::Queue.main.async {
-      @count += 1
-      @articles << {:title => "Article ##{@count}", :journal => "Journal ##{@count}"}
+      #@count += 1
+      #@articles << {:title => "Article ##{@count}", :journal => "Journal ##{@count}"}
       #puts "Articles: #{@articles.inspect}"
       #output = AkornTasks.sync
       #puts "Got output: #{output}"
-      @atask = AkornTasks.new
-      @atask.sync
+      #@atask = AkornTasks.new
+      #@atask.sync
       #puts 'load_data finished!'
       #@table.reloadData
       #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all

@@ -13,7 +13,7 @@ class Article
           :published_at_date => :string,
           :published_at_time => :string,
           :read => :integer,
-          :favourite => :integer
+          :favourite => {:type => :integer, :default => 0 }
 
   belongs_to :filter
 end

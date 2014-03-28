@@ -24,8 +24,8 @@ class FilterListController < UIViewController
     @reuse_identifier ||= 'FILTERS_IDENTIFIER'
     cell = tableView.dequeueReusableCellWithIdentifier(@reuse_identifier)
     cell ||= UITableViewCell.alloc.initWithStyle(UITableViewCellStyleSubtitle, reuseIdentifier: @reuse_identifier)
-    cell.textLabel.text = @filters[indexPath.row].text
-    cell.detailTextLabel.text = @filters[indexPath.row].type
+    cell.textLabel.text = 'Placeholder title' #@filters[indexPath.row].search_terms[0].text # do a join here
+    cell.detailTextLabel.text = 'Placeholder journal' #@filters[indexPath.row].type
     cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
     cell.textLabel.numberOfLines = 0
     cell
