@@ -74,12 +74,12 @@ class ArticleListController < UIViewController
     @filter_id = filter_id
     #puts "Reloading search: #{filter_id}"
     if filter_id.nil? || filter_id == 'all_articles'
-      @articles = Article.all
+      @articles = Article.order(:published_at_date).all
     else
       filter = Filter.where('search_id').eq(filter_id).first
       @articles = []
       filter.articles.each do |aid|
-        @articles << Article.where(:article_id).eq(aid).first
+        @articles << Article.order(:published_at_date).where(:article_id).eq(aid).first
       end
     end
     @table.reloadData

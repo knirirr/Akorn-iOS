@@ -12,7 +12,7 @@ class FilterListController < UIViewController
     @table.delegate = self
 
     @filters = Filter.all
-    puts "FL controller loaded #{@filters.length} filters"
+    #puts "FL controller loaded #{@filters.length} filters"
 
   end
 
