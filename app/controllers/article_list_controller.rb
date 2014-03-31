@@ -1,5 +1,5 @@
 class ArticleListController < UIViewController
-  attr_accessor :filter_id, :table
+  attr_accessor :filter_id, :table, :articles
 
   def viewDidLoad
     super
@@ -22,7 +22,8 @@ class ArticleListController < UIViewController
     #    {:title => 'Article #1', :journal => 'Journal #1'},
     #]
     #@count = 1
-    @articles = Article.all
+    reload_search(@filter_id)
+
 
     # buttons for the drawers
     # The MMDrawerController should be the delegate, so the toggleDrawerSide method is passed
@@ -51,16 +52,18 @@ class ArticleListController < UIViewController
     @reuse_identifier ||= 'ARTICLES_IDENTIFIER'
     cell = tableView.dequeueReusableCellWithIdentifier(@reuse_identifier)
     cell ||= UITableViewCell.alloc.initWithStyle(UITableViewCellStyleSubtitle, reuseIdentifier: @reuse_identifier)
-    cell.textLabel.text = @articles[indexPath.row][:title]
-    cell.detailTextLabel.text = @articles[indexPath.row][:journal]
-    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
-    cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
-    cell.textLabel.numberOfLines = 0
+    if !@articles.empty?
+      cell.textLabel.text = @articles[indexPath.row].title
+      cell.detailTextLabel.text = @articles[indexPath.row].journal
+      cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
+    end
+    #cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
+    #cell.textLabel.numberOfLines = 0
     cell
   end
 
   def tableView(tableView, didSelectRowAtIndexPath: indexPath)
-    puts "Selected row at #{indexPath.row}"
+    #puts "Selected row at #{indexPath.row}"
     tableView.deselectRowAtIndexPath(indexPath, animated: true)
     view_controller = ArticleViewController.alloc.init
     # set article ID here
@@ -69,14 +72,22 @@ class ArticleListController < UIViewController
 
   def reload_search(filter_id)
     @filter_id = filter_id
-    puts "Filter id: #{@filter_id}"
-    filters = Filter.find { |filter| filter.search_id == @filter_id }
-    puts "Would display articles for filter: #{filters.first.id}, #{filters.first.search_id}, #{filters.first.text}"
+    #puts "Reloading search: #{filter_id}"
+    if filter_id.nil? || filter_id == 'all_articles'
+      @articles = Article.all
+    else
+      filter = Filter.where('search_id').eq(filter_id).first
+      @articles = []
+      filter.articles.each do |aid|
+        @articles << Article.where(:article_id).eq(aid).first
+      end
+    end
+    @table.reloadData
   end
 
   def load_data
     @atask = AkornTasks.new
-    @atask.sync
+    @atask.sync(@filter_id)
     #Dispatch::Queue.main.after(1) {
     #Dispatch::Queue.main.async {
       #@count += 1
