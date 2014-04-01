@@ -17,11 +17,6 @@ class ArticleListController < UIViewController
           load_data
         end
     )
-
-    #@articles = [
-    #    {:title => 'Article #1', :journal => 'Journal #1'},
-    #]
-    #@count = 1
     reload_search(@filter_id)
 
 
@@ -30,8 +25,8 @@ class ArticleListController < UIViewController
     # to that in the show_filters/options methods by means of bubble-wrap's 'App'
     leftDrawerButton = MMDrawerBarButtonItem.alloc.initWithTarget self, action: 'show_filters'
     navigationItem.setLeftBarButtonItem leftDrawerButton, animated: true
-    rightDrawerButton = MMDrawerBarButtonItem.alloc.initWithTarget self, action: 'show_options'
-    navigationItem.setRightBarButtonItem rightDrawerButton, animated: true
+    #rightDrawerButton = MMDrawerBarButtonItem.alloc.initWithTarget self, action: 'show_options'
+    #navigationItem.setRightBarButtonItem rightDrawerButton, animated: true
 
 
   end
@@ -40,12 +35,11 @@ class ArticleListController < UIViewController
     App.window.delegate.toggleDrawerSide MMDrawerSideLeft, animated:true, completion: nil
   end
 
-  def show_options
-    App.window.delegate.toggleDrawerSide MMDrawerSideRight, animated:true, completion: nil
-  end
-
   def tableView(tableView, numberOfRowsInSection: section)
-    @articles.length
+    #@articles.length
+    # sum of number of articles per publication date
+    #@articles.values.collect {|v| v.length}.reduce(:+)
+    rows_for_section(section).count
   end
 
   def tableView(tableView, cellForRowAtIndexPath: indexPath)
@@ -53,9 +47,14 @@ class ArticleListController < UIViewController
     cell = tableView.dequeueReusableCellWithIdentifier(@reuse_identifier)
     cell ||= UITableViewCell.alloc.initWithStyle(UITableViewCellStyleSubtitle, reuseIdentifier: @reuse_identifier)
     if !@articles.empty?
-      cell.textLabel.text = @articles[indexPath.row].title
-      cell.detailTextLabel.text = @articles[indexPath.row].journal
+      cell.textLabel.text = row_for_index_path(indexPath).title
+      cell.detailTextLabel.text = row_for_index_path(indexPath).journal
       cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
+      if row_for_index_path(indexPath).favourite == 1
+        cell.setTextColor(UIColor.orangeColor)
+      else
+        cell.setTextColor(UIColor.blackColor)
+      end
     end
     #cell.textLabel.lineBreakMode = UILineBreakModeWordWrap
     #cell.textLabel.numberOfLines = 0
@@ -67,42 +66,51 @@ class ArticleListController < UIViewController
     tableView.deselectRowAtIndexPath(indexPath, animated: true)
     view_controller = ArticleViewController.alloc.init
     # set article ID here
+    view_controller.article_id = row_for_index_path(indexPath).article_id
     self.navigationController.pushViewController(view_controller, animated: true)
+  end
+
+  def tableView(tableView, titleForHeaderInSection: section)
+    sections[section]
+  end
+
+  def sections
+    @articles.keys.sort {|x,y| y <=> x }
+  end
+
+  def rows_for_section(section_index)
+    @articles[self.sections[section_index]]
+  end
+
+  def row_for_index_path(index_path)
+    rows_for_section(index_path.section)[index_path.row]
+  end
+
+  def numberOfSectionsInTableView(tableView)
+    self.sections.count
   end
 
   def reload_search(filter_id)
     @filter_id = filter_id
     #puts "Reloading search: #{filter_id}"
+    @articles = {}
     if filter_id.nil? || filter_id == 'all_articles'
-      @articles = Article.order(:published_at_date).all
+      orig_array = Article.all
     else
       filter = Filter.where('search_id').eq(filter_id).first
-      @articles = []
+      orig_array = []
       filter.articles.each do |aid|
-        @articles << Article.order(:published_at_date).where(:article_id).eq(aid).first
+        orig_array << Article.where(:article_id).eq(aid).first
       end
     end
+    @articles = orig_array.group_by{|h| h.published_at_date}
+    puts "Articles: #{@articles}"
     @table.reloadData
   end
 
   def load_data
     @atask = AkornTasks.new
     @atask.sync(@filter_id)
-    #Dispatch::Queue.main.after(1) {
-    #Dispatch::Queue.main.async {
-      #@count += 1
-      #@articles << {:title => "Article ##{@count}", :journal => "Journal ##{@count}"}
-      #puts "Articles: #{@articles.inspect}"
-      #output = AkornTasks.sync
-      #puts "Got output: #{output}"
-      #@atask = AkornTasks.new
-      #@atask.sync
-      #puts 'load_data finished!'
-      #@table.reloadData
-      #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
-      #App.delegate.instance_variable_get('@fl_controller').table.reloadData
-      #@table.pullToRefreshView.stopAnimating
-    #}
   end
 
 

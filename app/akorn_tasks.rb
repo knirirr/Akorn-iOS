@@ -14,7 +14,7 @@ class AkornTasks
     cookie = nil
 
     HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
-      puts "About to get filters!"
+      #puts "About to get filters!"
       if response.ok?
         cookie = response.headers['Set-Cookie']
         HTTP.get("#{url}/searches", {cookie: @auth_cookie}) do |response|
@@ -24,18 +24,16 @@ class AkornTasks
             fetch_articles(filters)
           end
           # having now got the filters the articles for each can be fetched
-          puts 'Finished getting searches!'
-          puts 'About to reload the tables!'
+          #puts 'Finished getting searches!'
+          #puts 'About to reload the tables!'
           # reload all the tables
           App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
           App.delegate.instance_variable_get('@fl_controller').table.reloadData
-          #App.delegate.instance_variable_get('@al_controller').reload_search(@filter_id)
-          #App.delegate.instance_variable_get('@al_controller').table.reloadData
           App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
           # some table reloading has been moved to fetch_articles to make sure
           # it is fired at the last possible moment
-          puts 'Tables reloaded!'
-          puts 'Sync finished!'
+          #puts 'Tables reloaded!'
+          #puts 'Sync finished!'
         end
       elsif response.status_code.to_s =~ /40\d/
         App.alert('Login failed!')
@@ -95,7 +93,7 @@ class AkornTasks
 =end
 
   def fetch_articles(filters)
-    puts 'Fetching articles!'
+    #puts 'Fetching articles!'
     articles = Article.find { |article| article.favourite != 1 }
     articles.each { |article| article.delete }
     filters.each do |k,v|
@@ -109,7 +107,7 @@ class AkornTasks
         end
       end
       # fetch all the articles
-      puts "Final URL: #{article_url}"
+      #puts "Final URL: #{article_url}"
       HTTP.get(article_url, {cookie: @auth_cookie}) do |response|
         #filters = JSON.parse(response.body.to_str)
         #puts "Body: #{response.body.to_str}"
@@ -118,52 +116,38 @@ class AkornTasks
         rxml = RXMLElement.elementFromXMLString(response.body.to_str, encoding:NSUTF8StringEncoding)
         rxml.iterate('article', usingBlock:lambda { |a|
           authors = []
-          id = ''
-          title = ''
-          journal = ''
-          abstract = ''
-          link = ''
-          date_published = ''
-          #puts "A: #{a.to_s}"
+          fields = {
+            'id' => '',
+            'title' => '',
+            'journal' => '',
+            'abstract' => '',
+            'link' => '',
+            'date_published' => ''
+          }
+          # authors must be put into an array and joined to produce a single author string with commas
           a.iterate('authors', usingBlock:lambda { |b|
             b.iterate('author', usingBlock:lambda { |c|
               #puts "C: #{c.text}"
               authors << c.text
             })
           })
-          #puts "Id: #{a.id}"
-          a.iterate('id', usingBlock:lambda { |b|
-            id = b.text
-          })
-          #puts "Journal: #{a.journal}"
-          a.iterate('journal', usingBlock:lambda { |b|
-            journal = b.text
-          })
-          #puts "Title: #{a.title}"
-          a.iterate('title', usingBlock:lambda { |b|
-            title = b.text
-          })
-          #puts "Abstract: #{a.abstract}"
-          a.iterate('abstract', usingBlock:lambda { |b|
-            abstract = b.text
-          })
-          #puts "Link: #{a.link}"
-          a.iterate('link', usingBlock:lambda { |b|
-            link = b.text
-          })
-          #puts "Date_published: #{a.date_published}"
-          a.iterate('date_published', usingBlock:lambda { |b|
-            date_published = b.text
-          })
-          # create the new article and save it
-          new_article = Article.new(:title => title,
-                                    :article_id => id,
-                                    :journal => journal,
-                                    :link => link,
-                                    :abstract => abstract,
+          # for each other field only the string is required, although for the date this will be split
+          # into date and time. Date will be used for the key of a hash so that the table can be displayed
+          # with section headers by date
+          fields.each_key do |key|
+            a.iterate(key, usingBlock:lambda { |value|
+              fields[key] = value.text
+            })
+          end
+          ## create the new article and save it
+          new_article = Article.new(:title => fields['title'],
+                                    :article_id => fields['id'],
+                                    :journal => fields['journal'],
+                                    :link => fields['link'],
+                                    :abstract => fields['abstract'],
                                     :authors => authors.join(', '),
-                                    :published_at_date => date_published.split('T')[0],
-                                    :published_at_time => date_published.split('T')[1],
+                                    :published_at_date => fields['date_published'].split('T')[0],
+                                    :published_at_time => fields['date_published'].split('T')[1],
                                     :read => 0,
                                     :favourite => 0)
           new_article.save

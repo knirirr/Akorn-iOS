@@ -73,6 +73,8 @@ GEM
       calabash-cucumber (= 0.9.160)
     motion-cocoapods (1.4.0)
       cocoapods (>= 0.26.2)
+    motion-iconic (0.0.4)
+      motion-cocoapods (~> 1.4.0)
     motion-require (0.2.0)
     motion-settings-bundle (0.3.0)
       plist (~> 3.1.0)
@@ -129,6 +131,7 @@ DEPENDENCIES
   bubble-wrap
   motion-calabash
   motion-cocoapods
+  motion-iconic
   motion-settings-bundle
   motion_model
   rake
