@@ -25,9 +25,6 @@ class ArticleListController < UIViewController
     # to that in the show_filters/options methods by means of bubble-wrap's 'App'
     leftDrawerButton = MMDrawerBarButtonItem.alloc.initWithTarget self, action: 'show_filters'
     navigationItem.setLeftBarButtonItem leftDrawerButton, animated: true
-    #rightDrawerButton = MMDrawerBarButtonItem.alloc.initWithTarget self, action: 'show_options'
-    #navigationItem.setRightBarButtonItem rightDrawerButton, animated: true
-
 
   end
 
@@ -92,7 +89,7 @@ class ArticleListController < UIViewController
 
   def reload_search(filter_id)
     @filter_id = filter_id
-    #puts "Reloading search: #{filter_id}"
+    puts "Reloading search: #{filter_id}"
     @articles = {}
     if filter_id.nil? || filter_id == 'all_articles'
       orig_array = Article.all

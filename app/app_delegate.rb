@@ -17,6 +17,12 @@ class AppDelegate
     drawer_controller = MMDrawerController.alloc. initWithCenterViewController(main_nav_controller,
                                                                                leftDrawerViewController: left_nav_controller,
                                                                                rightDrawerViewController: nil)
+
+    # N.B. this causes sliding the drawer to work in all circumstances, which might not be ideal if a user
+    # selects a filter when looking at an article detail
+    drawer_controller.openDrawerGestureModeMask = MMOpenDrawerGestureModeAll
+    drawer_controller.closeDrawerGestureModeMask = MMCloseDrawerGestureModeAll
+
     UINavigationBar.appearance.barTintColor = '#00a56d'.to_color
     UINavigationBar.appearance.setTitleTextAttributes({
       UITextAttributeFont => UIFont.fontWithName('Helvetica Neue', size:24),

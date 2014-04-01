@@ -16,12 +16,19 @@ class ArticleViewController < UIViewController
     #self.title = 'Article'
 
     # buttons to share, visit website and bookmark this article
+    # https://github.com/clearsightstudio/ProMotion/issues/386
+    share_image = Mic.ionIcon(:ios7UploadOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
+    site_image = Mic.ionIcon(:ios7WorldOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
+    favourite_image = Mic.ionIcon(:ios7StarOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
     view.backgroundColor = UIColor.whiteColor
-    share_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemCompose, target: self, action: :sharing_action)
+    #share_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemCompose, target: self, action: :sharing_action)
+    share_button = UIBarButtonItem.alloc.initWithImage(share_image, style: UIBarButtonItemStyleBordered, target: self, action: :sharing_action)
     share_button.setTintColor(UIColor.whiteColor)
-    site_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemAction, target: self, action: :visit_journal)
+    #site_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemAction, target: self, action: :visit_journal)
+    site_button = UIBarButtonItem.alloc.initWithImage(site_image, style: UIBarButtonItemStyleBordered, target: self, action: :visit_journal)
     site_button.setTintColor(UIColor.whiteColor)
-    @favourite_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemBookmarks, target: self, action: :toggle_favourite)
+    #@favourite_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemBookmarks, target: self, action: :toggle_favourite)
+    @favourite_button = UIBarButtonItem.alloc.initWithImage(favourite_image, style: UIBarButtonItemStyleBordered, target: self, action: :toggle_favourite)
     if @article.favourite == 1
       @favourite_button.setTintColor(UIColor.orangeColor)
     else
