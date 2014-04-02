@@ -6,10 +6,9 @@ class AkornTasks
   def sync(filter_id)
     @filter_id = filter_id
     # login first
-    url = self.url
+    url = AkornTasks.url
     email = NSUserDefaults.standardUserDefaults['email']
     password = NSUserDefaults.standardUserDefaults['password']
-    url = self.url
     data = {username: email, password: password}
     cookie = nil
 
@@ -47,7 +46,7 @@ class AkornTasks
   end
 
 
-  def url
+  def self.url
     server_port = NSUserDefaults.standardUserDefaults['server_port']
     if server_port == 'Development'
       @url = "http://akorn.org:8000/api"
@@ -58,30 +57,59 @@ class AkornTasks
 
 
 
-  # REWORK TO IMPLEMENT AN ARRAY TYPE
+  # This dodgy code should purge and re-create all filters except the two default ones
   def create_filters(filters)
-    Filter.destroy_all
-    # this code sucks. If only I understood how to use blocks, rather than just read descriptions of them and
-    # think 'that sort of makes sense, but how would I even use this?'
-    new_filter('all_articles',
+    puts "New filters: #{filters.length}"
+    @delete = []
+    @keep = []
+    Filter.all.each do |f|
+      #puts "SID: #{f.search_id}, #{f.search_terms}"
+      unless f.search_id == 'all_articles' or f.search_id == 'saved_articles'
+        #puts "Deleting: #{f.search_id}, #{f.search_terms}"
+        @delete << f.search_id
+      end
+    end
+    # the two default filters need to be created if this is the first run and they don't
+    # already exist
+    if Filter.where(:search_id).eq('all_articles').first.class != Filter
+      new_filter('all_articles',
                [{'full' => 'All articles',
                  'text' => 'All articles',
                  'type' => 'All articles downloaded to this device',
                  'term_id' => 'NA'}])
-    new_filter('saved_articles',
+    end
+    if Filter.where(:search_id).eq('saved_articles').first.class != Filter
+      new_filter('saved_articles',
                [{'full' => 'Saved articles',
                  'text' => 'Saved articles',
                  'type' => 'Articles starred on this device',
                  'term_id' => 'NA'}])
+    end
+
+    # finally create new filters for searches which have just been synced
     filters.each do |k,v|
       new_filter(k,v)
     end
+
+    #puts "Keep: #{@keep}"
+    #puts "Delete: #{@delete}"
+    #puts "Really delete: #{@delete - @keep}"
+
+    @obsolete = @delete - @keep
+    @obsolete.each {|f| Filter.where(:search_id).eq(f).first.delete}
+
   end
 
   def new_filter(id,array)
-    puts "Creating: #{id},#{array}"
-    filter = Filter.new(:search_id => id, :search_terms => array, :articles => [])
-    filter.save
+    if Filter.where(:search_id).eq(id).first.class == Filter
+      #puts "Already got: #{id}, #{array}"
+      @keep << id
+      return
+    else
+      #puts "Creating: #{id},#{array}"
+      filter = Filter.new(:search_id => id, :search_terms => array, :articles => [])
+      filter.save
+    end
   end
 
 =begin
@@ -95,12 +123,13 @@ class AkornTasks
 
   def fetch_articles(filters)
     #puts 'Fetching articles!'
+    url = AkornTasks.url
     articles = Article.find { |article| article.favourite != 1 }
     articles.each { |article| article.delete }
     filters.each do |k,v|
-      article_url = "#{self.url}/articles.xml?skip=0&limit=20"
+      article_url = "#{url}/articles.xml?skip=0&limit=20"
       v.each do |section|
-        puts "Articles for filter #{k}, #{section['type']}"
+        #puts "Articles for filter #{k}, #{section['type']}"
         if section['type'] == 'keyword'
           article_url += "&k=#{section['text']}"
         else
@@ -154,14 +183,12 @@ class AkornTasks
                                       :read => 0,
                                       :favourite => 0)
             new_article.save
+            filter = Filter.where(:search_id).eq(k).first
+            if !filter.articles.include?(new_article.article_id)
+              filter.articles << new_article.article_id
+            end
+            filter.save
           end
-          filter = Filter.where(:search_id).eq(k).first
-          #puts "Filter: #{filter}, #{filter.articles}"
-          unless filter.articles.include?(new_article.article_id)
-            filter.articles << new_article.article_id
-          end
-          filter.save
-          #puts "New: #{new_article.inspect}"
         })
         #puts "Reloading!"
         # this is here to make sure the table is reloaded after each filter's articles
@@ -175,11 +202,10 @@ class AkornTasks
 
   # this should do an async filter delete and update the filter_list_controller's table
   def delete_filter(filter_id)
-    url = self.url
+    url = AkornTasks.url
     email = NSUserDefaults.standardUserDefaults['email']
     password = NSUserDefaults.standardUserDefaults['password']
 
-    url = self.url
     data = {username: email, password: password}
     cookie = nil
 

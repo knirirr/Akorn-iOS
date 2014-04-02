@@ -1,4 +1,5 @@
 class NewAccountController < UIViewController
+  include BubbleWrap
 
   def viewDidLoad
     super
@@ -94,8 +95,6 @@ class NewAccountController < UIViewController
     pass = @password.text
     pass2 = @password_confirmation.text
 
-    puts "#{email},#{pass},#{pass2}"
-
     if email.empty? or pass.empty? or pass2.empty?
       App.alert('Account creation failed!', {cancel_button_title: 'OK', message: 'Please complete all the fields in order to submit.'})
       return
@@ -104,7 +103,35 @@ class NewAccountController < UIViewController
     # having got to this point it's time to try a background query. This will be done here rather than in akorn_tasks.rb in order that
     # this controller can be dismissed via cancel_action upon the successful creation of the account whilst allowing the user to keep
     # trying if something goes wrong
+    url = AkornTasks.url
+    data = {email: email, password1: pass, password2: pass2}
 
+    HTTP.post("#{url}/register", {payload: data}) do |response|    # get the users filters
+      # success will be a code 200
+      puts "Status code: #{response.status_code}"
+      if response.status_code == 200
+        #App::Persistence['email'] = email
+        #App::Persistence['password'] = pass
+        NSUserDefaults.standardUserDefaults['email'] = email
+        NSUserDefaults.standardUserDefaults['password'] = pass
+        App.alert('Success!', {cancel_button_title: 'OK', message:  'You may now create filters and sync to see articles.'})
+        self.dismissViewControllerAnimated(true, completion: lambda {} )
+      elsif response.status_code.to_s =~ /40\d/
+        puts "Body: #{response.body}"
+        json = JSON.parse(response.body.to_str)
+        if !json['errors']['email'].nil?
+          email_errors = json['errors']['email'].join("\n")
+        end
+        if !json['errors']['password2'].nil?
+          password_errors = !json['errors']['password2'].join("\n")
+        end
+        errors = [email_errors, password_errors].join("\n")
+
+        App.alert('Account creation failed!', {cancel_button_title: 'OK', message:  errors})
+      else
+        App.alert("Account creation failed with message: #{response.error_message}")
+      end
+    end
   end
 
 end

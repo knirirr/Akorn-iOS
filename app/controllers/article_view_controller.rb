@@ -111,15 +111,19 @@ class ArticleViewController < UIViewController
       @article.favourite = 1
       @article.save
       @favourite_button.setTintColor(UIColor.orangeColor)
+      puts "FFA: #{@favourites_filter.articles}"
       @favourites_filter.articles << @article.article_id
-      @favourites_filter.save
+      puts "FFA: #{@favourites_filter.articles}"
+      @favourites_filter.save!
       #puts "Making favourite: #{@favourites_filter.articles}, #{@article.favourite}"
     elsif @article.favourite == 1
       @article.favourite = 0
       @article.save
       @favourite_button.setTintColor(UIColor.whiteColor)
+      puts "FFA: #{@favourites_filter.articles}"
       @favourites_filter.articles.delete @article.article_id
-      @favourites_filter.save
+      puts "FFA: #{@favourites_filter.articles}"
+      @favourites_filter.save!
       #puts "Unmaking favourite: #{@favourites_filter.articles}, #{@article.favourite}"
     end
     App.delegate.instance_variable_get('@al_controller').table.reloadData
