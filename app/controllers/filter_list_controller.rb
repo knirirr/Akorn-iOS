@@ -50,22 +50,32 @@ class FilterListController < UIViewController
   end
 
   def tableView(tableView, editingStyleForRowAtIndexPath: indexPath)
-    UITableViewCellEditingStyleDelete
+    puts "SID: #{@filters[indexPath.row].search_id}"
+    case @filters[indexPath.row].search_id
+      when 'saved_articles', 'all_articles'
+        UITableViewCellEditingStyleNone
+      else
+        UITableViewCellEditingStyleDelete
+    end
   end
 
   def tableView(tableView, commitEditingStyle: editingStyle, forRowAtIndexPath: indexPath)
     if editingStyle == UITableViewCellEditingStyleDelete
-      f = @filters.delete_at(indexPath.row)
+      #f = @filters.delete_at(indexPath.row)
       #p.destroy
-      destroy_filter(f)
-      tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation:UITableViewRowAnimationFade)
-      tableView.reloadData
+      #destroy_filter(f.s)
+      #tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation:UITableViewRowAnimationFade)
+      #tableView.reloadData
+      filter_id = @filters[indexPath.row].search_id
+      @atask = AkornTasks.new
+      @atask.delete_filter(filter_id)
     end
   end
 
-  def destroy_filter(f)
-    puts "Would make call to server to delete filter"
-  end
+  #def destroy_filter(f)
+  #  @atask = AkornTasks.new
+  #  @atask.delete(@filter_id)
+  #end
 
   def new_filter
     App.alert('New Filter', {message: 'This code hasn\'t been written yet. Sorry.', cancel_button_title: 'FRC!'})

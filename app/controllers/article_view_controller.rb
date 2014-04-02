@@ -21,13 +21,10 @@ class ArticleViewController < UIViewController
     site_image = Mic.ionIcon(:ios7WorldOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
     favourite_image = Mic.ionIcon(:ios7StarOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
     view.backgroundColor = UIColor.whiteColor
-    #share_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemCompose, target: self, action: :sharing_action)
     share_button = UIBarButtonItem.alloc.initWithImage(share_image, style: UIBarButtonItemStyleBordered, target: self, action: :sharing_action)
     share_button.setTintColor(UIColor.whiteColor)
-    #site_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemAction, target: self, action: :visit_journal)
     site_button = UIBarButtonItem.alloc.initWithImage(site_image, style: UIBarButtonItemStyleBordered, target: self, action: :visit_journal)
     site_button.setTintColor(UIColor.whiteColor)
-    #@favourite_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemBookmarks, target: self, action: :toggle_favourite)
     @favourite_button = UIBarButtonItem.alloc.initWithImage(favourite_image, style: UIBarButtonItemStyleBordered, target: self, action: :toggle_favourite)
     if @article.favourite == 1
       @favourite_button.setTintColor(UIColor.orangeColor)
@@ -92,7 +89,21 @@ class ArticleViewController < UIViewController
 
   def sharing_action
     #puts 'Link sharing!'
-    App.alert('Share Link', {message: 'This code hasn\'t been written yet. Sorry.', cancel_button_title: 'FRC!'})
+    #App.alert('Share Link', {message: 'This code hasn\'t been written yet. Sorry.', cancel_button_title: 'FRC!'})
+    activityItems = []
+    #[:title, :authors, :journal, :link, :abstract].each do |stuff|
+    [:title, :link].each do |stuff|
+      if stuff == :journal
+        activityItems << "#{@article.send(stuff)}, #{@article.send(:published_at_date)} #{@article.send(:published_at_time)}\n"
+      elsif stuff == :abstract
+        activityItems << @article.send(stuff).gsub(/\n\s+/,' ') + "\n"
+      else
+        activityItems << @article.send(stuff) + "\n"
+      end
+    end
+    activityItems << "Shared from the Akorn app for iOS\n"
+    sharing_controller = UIActivityViewController.alloc.initWithActivityItems(activityItems, applicationActivities: nil)
+    self.presentViewController(sharing_controller, animated: true, completion: nil)
   end
 
   def toggle_favourite
@@ -114,18 +125,4 @@ class ArticleViewController < UIViewController
     App.delegate.instance_variable_get('@al_controller').table.reloadData
   end
 
-end
-
-class Blurb
-  attr_accessor :label
-
-  def initialize(text, height, svheight,font)
-    frame = CGRectMake(5,height, svheight - 5,0)
-    @label = UILabel.alloc.initWithFrame(frame)
-    @label.text = text
-    @label.lineBreakMode = UILineBreakModeWordWrap
-    @label.numberOfLines = 0
-    @label.font = font
-    @label.sizeToFit
-  end
 end

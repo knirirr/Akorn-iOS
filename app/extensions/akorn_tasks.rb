@@ -13,6 +13,7 @@ class AkornTasks
     data = {username: email, password: password}
     cookie = nil
 
+
     HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
       #puts "About to get filters!"
       if response.ok?
@@ -140,17 +141,20 @@ class AkornTasks
             })
           end
           ## create the new article and save it
-          new_article = Article.new(:title => fields['title'],
-                                    :article_id => fields['id'],
-                                    :journal => fields['journal'],
-                                    :link => fields['link'],
-                                    :abstract => fields['abstract'],
-                                    :authors => authors.join(', '),
-                                    :published_at_date => fields['date_published'].split('T')[0],
-                                    :published_at_time => fields['date_published'].split('T')[1],
-                                    :read => 0,
-                                    :favourite => 0)
-          new_article.save
+          existing_article = Article.where(:article_id).eq(fields['id']).first
+          if existing_article.nil?
+            new_article = Article.new(:title => fields['title'],
+                                      :article_id => fields['id'],
+                                      :journal => fields['journal'],
+                                      :link => fields['link'],
+                                      :abstract => fields['abstract'],
+                                      :authors => authors.join(', '),
+                                      :published_at_date => fields['date_published'].split('T')[0],
+                                      :published_at_time => fields['date_published'].split('T')[1],
+                                      :read => 0,
+                                      :favourite => 0)
+            new_article.save
+          end
           filter = Filter.where(:search_id).eq(k).first
           #puts "Filter: #{filter}, #{filter.articles}"
           unless filter.articles.include?(new_article.article_id)
@@ -168,6 +172,45 @@ class AkornTasks
     end
 
   end
+
+  # this should do an async filter delete and update the filter_list_controller's table
+  def delete_filter(filter_id)
+    url = self.url
+    email = NSUserDefaults.standardUserDefaults['email']
+    password = NSUserDefaults.standardUserDefaults['password']
+
+    url = self.url
+    data = {username: email, password: password}
+    cookie = nil
+
+    HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
+      #puts "About to get filters!"
+      if response.ok?
+        cookie = response.headers['Set-Cookie']
+        HTTP.get("#{url}/remove_search?query_id=#{filter_id}", {cookie: @auth_cookie}) do |response|
+          # success will be a code 204
+          puts "Status code: #{response.status_code}"
+          if response.status_code == 204
+            # refresh the list if it works
+            filter = Filter.where(:search_id).eq(filter_id).first
+            filter.delete
+            App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
+            App.delegate.instance_variable_get('@fl_controller').table.reloadData
+            App.delegate.instance_variable_get('@al_controller').table.reloadData
+          else
+            App.alert('Failed to delete filter!')
+          end
+        end
+      elsif response.status_code.to_s =~ /40\d/
+        App.alert('Login failed!')
+        App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      else
+        App.alert("Login failed with message: #{response.error_message}")
+        App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      end
+    end
+  end
+
 end
 
 __END__

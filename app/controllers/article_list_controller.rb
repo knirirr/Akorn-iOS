@@ -106,8 +106,18 @@ class ArticleListController < UIViewController
   end
 
   def load_data
-    @atask = AkornTasks.new
-    @atask.sync(@filter_id)
+    email = NSUserDefaults.standardUserDefaults['email']
+    password = NSUserDefaults.standardUserDefaults['password']
+    if email.empty? and password.empty?
+      @table.pullToRefreshView.stopAnimating
+      App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      new_account_controller = NewAccountController.alloc.init
+      nav_controller = UINavigationController.alloc.initWithRootViewController(new_account_controller)
+      self.presentViewController(nav_controller, animated: true, completion: nil)
+    else
+      @atask = AkornTasks.new
+      @atask.sync(@filter_id)
+    end
   end
 
 
