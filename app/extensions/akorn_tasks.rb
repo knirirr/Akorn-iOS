@@ -22,6 +22,7 @@ class AkornTasks
           if !filters.nil?
             create_filters(filters)
             fetch_articles(filters)
+            fetch_journals
           end
           # having now got the filters the articles for each can be fetched
           #puts 'Finished getting searches!'
@@ -233,6 +234,37 @@ class AkornTasks
       else
         App.alert("Login failed with message: #{response.error_message}")
         App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      end
+    end
+  end
+
+  # I'm not so worried about this one finishing before the sync notification finishes
+  def fetch_journals
+    url = AkornTasks.url
+    on_device = Journal.all.collect {|j| j.journal_id}
+    on_server = []
+    HTTP.get("#{url}/journals") do |response|
+      if response.status_code == 200
+        journals = JSON.parse(response.body.to_str)
+        journals.each do |j|
+          if on_device.include?(j['id'])
+            next
+          else
+            on_server << j['id']
+            new_journal = Journal.new(:journal_id => j['id'],
+                                      :text => j['text'],
+                                      :full => j['full'],
+                                      :type => j['type'])
+            #puts "NJ: #{new_journal}"
+            new_journal.save
+          end
+        end
+        no_longer_needed = on_device - on_server
+        #puts "No longer needed: #{no_longer_needed}"
+        no_longer_needed.each {|j| Journal.where(:id).eq(j).first.delete}
+
+      else
+        puts "Failed to get journals: #{response.status_code}"
       end
     end
   end

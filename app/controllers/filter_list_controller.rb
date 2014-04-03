@@ -50,7 +50,6 @@ class FilterListController < UIViewController
   end
 
   def tableView(tableView, editingStyleForRowAtIndexPath: indexPath)
-    puts "SID: #{@filters[indexPath.row].search_id}"
     case @filters[indexPath.row].search_id
       when 'saved_articles', 'all_articles'
         UITableViewCellEditingStyleNone
@@ -72,13 +71,11 @@ class FilterListController < UIViewController
     end
   end
 
-  #def destroy_filter(f)
-  #  @atask = AkornTasks.new
-  #  @atask.delete(@filter_id)
-  #end
 
   def new_filter
-    App.alert('New Filter', {message: 'This code hasn\'t been written yet. Sorry.', cancel_button_title: 'FRC!'})
+    new_filter_controller = NewFilterController.alloc.init
+    nav_controller = UINavigationController.alloc.initWithRootViewController(new_filter_controller)
+    self.presentViewController(nav_controller, animated: true, completion: nil)
   end
 
 end

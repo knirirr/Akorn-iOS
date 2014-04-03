@@ -22,3 +22,20 @@ class CentreBlurb < Blurb
   end
 
 end
+
+class FilterBlurb
+  attr_accessor :widget
+
+  def initialize(type,name,frame)
+    @widget = UIView.alloc.initWithFrame(frame)
+    @widget.backgroundColor = UIColor.whiteColor
+    @widget.layer.cornerRadius = 10.0 # see URL to fix this later
+    @label = UILabel.alloc.initWithFrame(frame)
+    @label.text = text
+    @label.lineBreakMode = UILineBreakModeWordWrap
+    @label.numberOfLines = 0
+    @label.font = font
+    @label.sizeToFit
+  end
+
+end
