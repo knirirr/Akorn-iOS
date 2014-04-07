@@ -109,8 +109,12 @@ class NewFilterController <  UIViewController
     # and check to see if they are journal or keyword searches, then assemble a string to post
     # to the server in order to creat the filter
     sending = []
+    if @widgets.length == 0
+      App.alert('No filters!', {cancel_button_title: 'OK', message:  'Please specify some journal or keyword filters.'})
+      return
+    end
     @widgets.each do |w|
-      hash = {}
+      hash = {:type => '', :id => '', :text => '', :full => ''}
       w.subviews.each do |s|
         if s.is_a?(UILabel)
           if s.text == 'journal' or s.text == 'keyword'
@@ -128,9 +132,46 @@ class NewFilterController <  UIViewController
         end
       end
       sending << JSON.generate(hash)
+      #sending << hash
     end
-    puts "Will send: #{sending.inspect}"
+
+    # finally - toooo the server!
+    url = AkornTasks.url
+    email = NSUserDefaults.standardUserDefaults['email']
+    password = NSUserDefaults.standardUserDefaults['password']
+    query_data = {query: sending.to_s.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet)}
+    login_data = {username: email, password: password}
+
+    puts "Hash: #{hash.to_s}"
+    puts "Sending: #{query_data}"
+
+    HTTP.post("#{url}/login", {payload: login_data}) do |response|    # get the users filters
+      #puts "About to get filters!"
+      if response.ok?
+        cookie = response.headers['Set-Cookie']
+        HTTP.post("#{url}/searches", {cookie: cookie, payload: query_data}) do |response|
+          if response.status_code == 200
+            query_id = JSON.parse(response.body.to_str)['query_id']
+            puts "Query ID: #{query_id}"
+            # create a new filter locally
+
+            # sync to get articles associated with that filter
+
+          else
+            puts "Error: #{response.status_code.to_s}"
+            App.alert("Error #{response.status_code.to_s}", {cancel_button_title: 'OK', message: 'Unfortunately, your filter could not be created. This might be a problem with the server and so you may wish to email for assistance.'})
+          end
+        end
+      elsif response.status_code.to_s =~ /40\d/
+        App.alert('Login failed!')
+        App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      else
+        App.alert("Login failed with message: #{response.error_message}")
+        App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      end
+    end
   end
+
 
   def add_filter
     #puts "TC1: #{@tag_count}"

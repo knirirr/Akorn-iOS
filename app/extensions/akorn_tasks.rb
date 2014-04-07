@@ -30,7 +30,7 @@ class AkornTasks
           # reload all the tables
           App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
           App.delegate.instance_variable_get('@fl_controller').table.reloadData
-          App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+          #App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
           # some table reloading has been moved to fetch_articles to make sure
           # it is fired at the last possible moment
           #puts 'Tables reloaded!'
@@ -143,6 +143,7 @@ class AkornTasks
         #filters = JSON.parse(response.body.to_str)
         #puts "Body: #{response.body.to_str}"
         # authors, id, journal, abstract, link, date_published
+        next if response.body.nil?
 
         rxml = RXMLElement.elementFromXMLString(response.body.to_str, encoding:NSUTF8StringEncoding)
         rxml.iterate('article', usingBlock:lambda { |a|
@@ -242,15 +243,18 @@ class AkornTasks
   def fetch_journals
     url = AkornTasks.url
     on_device = Journal.all.collect {|j| j.journal_id}
+    #puts "OD: #{on_device.length}"
     on_server = []
     HTTP.get("#{url}/journals") do |response|
       if response.status_code == 200
         journals = JSON.parse(response.body.to_str)
         journals.each do |j|
-          if on_device.include?(j['id'])
-            next
-          else
-            on_server << j['id']
+          on_server << j['id']
+          #puts "Journal: #{j['id']}"
+          #if on_device.include?(j['id'])
+          #  next
+          #else
+          if Journal.where(:journal_id).eq(j['id']).length < 1
             new_journal = Journal.new(:journal_id => j['id'],
                                       :text => j['text'],
                                       :full => j['full'],
@@ -259,13 +263,27 @@ class AkornTasks
             new_journal.save
           end
         end
+
+
+
         no_longer_needed = on_device - on_server
         #puts "No longer needed: #{no_longer_needed}"
-        no_longer_needed.each {|j| Journal.where(:id).eq(j).first.delete}
+        puts "On server: #{on_server.length}"
+        puts "On device: #{on_device.length}"
+        puts "No longer needed: #{no_longer_needed.length}"
+        begin
+          no_longer_needed.each do |j|
+            puts "Trying to delete: #{j}"
+            Journal.where(:journal_id).eq(j).first.delete
+          end
+        rescue Exception => e
+          puts "Failed to delete journal: #{e.message}"
+        end
 
       else
         puts "Failed to get journals: #{response.status_code}"
       end
+      App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
     end
   end
 
