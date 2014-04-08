@@ -196,7 +196,7 @@ class AkornTasks
         # this is here to make sure the table is reloaded after each filter's articles
         # are synced; it's done this way because all the network calls are async, rather
         # than this whole class is it is in the Android app
-        App.delegate.instance_variable_get('@al_controller').table.reloadData
+        #App.delegate.instance_variable_get('@al_controller').table.reloadData
       end
     end
 
@@ -224,7 +224,7 @@ class AkornTasks
             filter.delete
             App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
             App.delegate.instance_variable_get('@fl_controller').table.reloadData
-            App.delegate.instance_variable_get('@al_controller').table.reloadData
+            #App.delegate.instance_variable_get('@al_controller').table.reloadData
           else
             App.alert('Failed to delete filter!')
           end
@@ -283,6 +283,7 @@ class AkornTasks
       else
         puts "Failed to get journals: #{response.status_code}"
       end
+      App.delegate.instance_variable_get('@al_controller').table.reloadData
       App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
     end
   end
