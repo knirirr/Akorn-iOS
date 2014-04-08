@@ -1,5 +1,6 @@
 class NewAccountController < UIViewController
   include BubbleWrap
+  attr_accessor :delegate
 
   def viewDidLoad
     super
@@ -87,7 +88,7 @@ class NewAccountController < UIViewController
   end
 
   def cancel_action
-    self.dismissViewControllerAnimated(true, completion: lambda {} )
+    delegate.dismiss_new_account_controller(self)
   end
 
   def submit_action

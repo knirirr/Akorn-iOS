@@ -112,12 +112,17 @@ class ArticleListController < UIViewController
       @table.pullToRefreshView.stopAnimating
       App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
       new_account_controller = NewAccountController.alloc.init
+      new_account_controller.delegate = self
       nav_controller = UINavigationController.alloc.initWithRootViewController(new_account_controller)
       self.presentViewController(nav_controller, animated: true, completion: nil)
     else
       @atask = AkornTasks.new
       @atask.sync(@filter_id)
     end
+  end
+
+  def dismiss_new_account_controller(new_account_controller)
+    dismissViewControllerAnimated(true, completion: nil)
   end
 
 

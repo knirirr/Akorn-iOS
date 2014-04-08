@@ -1,5 +1,6 @@
 class NewFilterController <  UIViewController
   include BubbleWrap
+  attr_accessor :delegate
 
 
   def viewDidLoad
@@ -74,14 +75,6 @@ class NewFilterController <  UIViewController
     @items
   end
 
-  #def autoCompleteTextField(textField, shouldConfigureCell: cell,
-  #                                     withAutoCompleteString: autocompleteString,
-  #                                     withAttributedString: boldedString,
-  #                                     forAutoCompleteObject: autocompleteObject,
-  #                                     forRowAtIndexPath: indexPath)
-  #  cell.backgroundColor = UIColor.blackColor
-  #end
-
   def autoCompleteTextField(textField, didSelectAutoCompleteString: selectedString,
                                        withAutoCompleteObject: selectedObject,
                                        forRowAtIndexPath: indexPath)
@@ -100,21 +93,22 @@ class NewFilterController <  UIViewController
 
 
   def cancel_action
-    self.dismissViewControllerAnimated(true, completion: lambda {} )
+    delegate.dismiss_new_filter(self)
   end
 
   def submit_action
-    puts "Connect to the server now."
     # this unspeakable horror should look through each of the "widgets" the user has created
     # and check to see if they are journal or keyword searches, then assemble a string to post
-    # to the server in order to creat the filter
+    # to the server in order to create the filter. As .to_s for a JSON array produces a string
+    # which the server accepts but then misreads I have instead assembled my own string in a
+    # tedious manner.
     sending = []
     if @widgets.length == 0
       App.alert('No filters!', {cancel_button_title: 'OK', message:  'Please specify some journal or keyword filters.'})
       return
     end
     @widgets.each do |w|
-      hash = {:type => '', :id => '', :text => '', :full => ''}
+      hash = {'type' => '', 'id' => '', 'text' => '', 'full' => ''}
       w.subviews.each do |s|
         if s.is_a?(UILabel)
           if s.text == 'journal' or s.text == 'keyword'
@@ -131,18 +125,21 @@ class NewFilterController <  UIViewController
           end
         end
       end
-      sending << JSON.generate(hash)
-      #sending << hash
+      #sending << JSON.generate(hash)
+      sending << hash
     end
+
 
     # finally - toooo the server!
     url = AkornTasks.url
     email = NSUserDefaults.standardUserDefaults['email']
     password = NSUserDefaults.standardUserDefaults['password']
-    query_data = {query: sending.to_s.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet)}
+    query_data = {query: sending.join(',').to_s.gsub(/=>/,':').stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet)}
     login_data = {username: email, password: password}
 
-    puts "Hash: #{hash.to_s}"
+    #puts "Hash: #{hash.to_s}"
+    puts "Sending: #{sending.join(',')}"
+    puts "Sending: #{sending.to_s.gsub(/=>/,':')}"
     puts "Sending: #{query_data}"
 
     HTTP.post("#{url}/login", {payload: login_data}) do |response|    # get the users filters
@@ -156,6 +153,7 @@ class NewFilterController <  UIViewController
             # create a new filter locally
 
             # sync to get articles associated with that filter
+            # this will need some sort of spinner whilst the sync takes place
 
           else
             puts "Error: #{response.status_code.to_s}"

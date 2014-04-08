@@ -74,8 +74,13 @@ class FilterListController < UIViewController
 
   def new_filter
     new_filter_controller = NewFilterController.alloc.init
+    new_filter_controller.delegate = self
     nav_controller = UINavigationController.alloc.initWithRootViewController(new_filter_controller)
     self.presentViewController(nav_controller, animated: true, completion: nil)
+  end
+
+  def dismiss_new_filter(new_filter_controller)
+    dismissViewControllerAnimated(true, completion: nil)
   end
 
 end
