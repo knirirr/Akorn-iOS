@@ -117,11 +117,11 @@ class NewFilterController <  UIViewController
             journal = Journal.where(:full).eq(s.text).first
             if !journal.nil?
               hash['id'] = journal.journal_id
+              hash['full'] = s.text # 'full' isn't used for keyword searches
             else
               hash['id'] = s.text
             end
             hash['text'] = s.text
-            hash['full'] = s.text
           end
         end
       end
