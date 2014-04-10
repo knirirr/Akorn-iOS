@@ -19,17 +19,16 @@ class ArticleViewController < UIViewController
     # https://github.com/clearsightstudio/ProMotion/issues/386
     share_image = Mic.ionIcon(:ios7UploadOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
     site_image = Mic.ionIcon(:ios7WorldOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
-    favourite_image = Mic.ionIcon(:ios7StarOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
+    @favourite_image = Mic.ionIcon(:ios7StarOutline, withSize: 22).imageWithSize(CGSizeMake(20, 20))
+    @favourite_image_activated = Mic.ionIcon(:ios7Star, withSize: 22).imageWithSize(CGSizeMake(20, 20))
     view.backgroundColor = UIColor.whiteColor
     share_button = UIBarButtonItem.alloc.initWithImage(share_image, style: UIBarButtonItemStyleBordered, target: self, action: :sharing_action)
     share_button.setTintColor(UIColor.whiteColor)
     site_button = UIBarButtonItem.alloc.initWithImage(site_image, style: UIBarButtonItemStyleBordered, target: self, action: :visit_journal)
     site_button.setTintColor(UIColor.whiteColor)
-    @favourite_button = UIBarButtonItem.alloc.initWithImage(favourite_image, style: UIBarButtonItemStyleBordered, target: self, action: :toggle_favourite)
+    @favourite_button = UIBarButtonItem.alloc.initWithImage(@favourite_image, style: UIBarButtonItemStyleBordered, target: self, action: :toggle_favourite)
     if @article.favourite == 1
-      @favourite_button.setTintColor(UIColor.orangeColor)
-    else
-      @favourite_button.setTintColor(UIColor.whiteColor)
+      @favourite_button.image = @favourite_image_activated
     end
     navigationItem.rightBarButtonItems = [@favourite_button, site_button, share_button]
 
@@ -110,7 +109,7 @@ class ArticleViewController < UIViewController
     if @article.favourite == 0
       @article.favourite = 1
       @article.save
-      @favourite_button.setTintColor(UIColor.orangeColor)
+      @favourite_button.image = @favourite_image_activated
       puts "FFA: #{@favourites_filter.articles}"
       @favourites_filter.articles << @article.article_id
       puts "FFA: #{@favourites_filter.articles}"
@@ -119,7 +118,7 @@ class ArticleViewController < UIViewController
     elsif @article.favourite == 1
       @article.favourite = 0
       @article.save
-      @favourite_button.setTintColor(UIColor.whiteColor)
+      @favourite_button.image = @favourite_image
       puts "FFA: #{@favourites_filter.articles}"
       @favourites_filter.articles.delete @article.article_id
       puts "FFA: #{@favourites_filter.articles}"

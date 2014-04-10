@@ -74,15 +74,13 @@ class AkornTasks
     # already exist
     if Filter.where(:search_id).eq('all_articles').first.class != Filter
       new_filter('all_articles',
-               [{'full' => 'All articles',
-                 'text' => 'All articles',
+               [{'text' => 'All articles',
                  'type' => 'All articles downloaded to this device',
                  'term_id' => 'NA'}])
     end
     if Filter.where(:search_id).eq('saved_articles').first.class != Filter
       new_filter('saved_articles',
-               [{'full' => 'Saved articles',
-                 'text' => 'Saved articles',
+               [{'text' => 'Saved articles',
                  'type' => 'Articles starred on this device',
                  'term_id' => 'NA'}])
     end

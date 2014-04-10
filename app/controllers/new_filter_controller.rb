@@ -239,7 +239,7 @@ class NewFilterController <  UIViewController
   end
 
   def remove_widget(sender)
-    @widgets.each {|w| puts "Widget tag: #{w.tag}"}
+    #@widgets.each {|w| puts "Widget tag: #{w.tag}"}
     if @widgets.length > 0
       # pop one off
       # remove from view
@@ -249,9 +249,27 @@ class NewFilterController <  UIViewController
           w.removeFromSuperview
         end
       end
+      @widgets.compact!
+      move_widgets_up if @widgets.length > 0
       resize_scrollview
     else
       puts 'Nothing to remove'
+    end
+  end
+
+  def move_widgets_up
+    starting_y = @search_box.frame.origin.y + @search_box.size.height + 5
+    @widgets.each do |widget|
+      index = @widgets.index(widget)
+      frame = widget.frame
+      if index == 0
+        frame.origin.y = starting_y
+        UIView.animateWithDuration(0.3, animations: lambda { widget.frame = frame}, completion: nil)
+      else
+        new_y = @widgets[index - 1].frame.origin.y + @widgets[index - 1].frame.size.height + 5
+        frame.origin.y = new_y
+        UIView.animateWithDuration(0.3, animations: lambda { widget.frame = frame}, completion: nil)
+      end
     end
   end
 
