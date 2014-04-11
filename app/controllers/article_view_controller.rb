@@ -30,7 +30,11 @@ class ArticleViewController < UIViewController
     if @article.favourite == 1
       @favourite_button.image = @favourite_image_activated
     end
-    navigationItem.rightBarButtonItems = [@favourite_button, site_button, share_button]
+    if @article.link.empty?
+      navigationItem.rightBarButtonItems = [@favourite_button,  share_button]
+    else
+      navigationItem.rightBarButtonItems = [@favourite_button, site_button, share_button]
+    end
 
 
 

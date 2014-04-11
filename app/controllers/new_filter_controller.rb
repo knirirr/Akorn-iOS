@@ -46,28 +46,48 @@ class NewFilterController <  UIViewController
     @blurb_view = Blurb.new(create_blurb, height, sv_frame.size.width,font).label
     @scroll_view.addSubview(@blurb_view)
 
-    # search box for typing in keyword or journal; journal names to autocomplete
+    ################################################################################
+    # search boxes for typing in keyword or journal; journal names to autocomplete #
+    ################################################################################
+
+    # keyword box
     height = @blurb_view.frame.origin.y + @blurb_view.frame.size.height + 5
     sb_frame = CGRectMake(5,height,@scroll_view.frame.size.width * 0.8, 30)
-    @search_box = MLPAutoCompleteTextField.alloc.initWithFrame(sb_frame)
-    @search_box.borderStyle = UITextBorderStyleRoundedRect
-    @search_box.textAlignment = UITextAlignmentCenter
-    @search_box.placeholder = 'Filter search term'
-    @search_box.autoCompleteDataSource = self
-    @search_box.autoCompleteDelegate = self
-    @search_box.setAutoCompleteTableBackgroundColor(UIColor.whiteColor)
-    @search_box.delegate = self
+    @keyword_search_box = UITextField.alloc.initWithFrame(sb_frame)
+    @keyword_search_box.borderStyle = UITextBorderStyleRoundedRect
+    @keyword_search_box.textAlignment = UITextAlignmentCenter
+    @keyword_search_box.placeholder = 'Type a keyword...'
+    @scroll_view.addSubview(@keyword_search_box)
 
-    #@search_box.autoCompleteDataSource = @items
-    @scroll_view.addSubview(@search_box)
+    # keyword add button
+    ab_frame = CGRectMake(@keyword_search_box.frame.origin.x + @keyword_search_box.frame.size.width, height,@scroll_view.frame.size.width * 0.2, 30)
+    @keyword_add_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+    @keyword_add_button.frame = ab_frame
+    @keyword_add_button.setTitle('Add', forState: UIControlStateNormal)
+    @keyword_add_button.addTarget(self, action: :add_keyword, forControlEvents: UIControlEventTouchUpInside)
+    @scroll_view.addSubview(@keyword_add_button)
 
-    # add button
-    ab_frame = CGRectMake(@search_box.frame.origin.x + @search_box.frame.size.width, height,@scroll_view.frame.size.width * 0.2, 30)
-    @add_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    @add_button.frame = ab_frame
-    @add_button.setTitle('Add', forState: UIControlStateNormal)
-    @add_button.addTarget(self, action: :add_filter, forControlEvents: UIControlEventTouchUpInside)
-    @scroll_view.addSubview(@add_button)
+
+    # journal box
+    height = @keyword_search_box.frame.origin.y + @keyword_search_box.frame.size.height + 5
+    sb_frame = CGRectMake(5,height,@scroll_view.frame.size.width * 0.8, 30)
+    @journal_search_box = MLPAutoCompleteTextField.alloc.initWithFrame(sb_frame)
+    @journal_search_box.borderStyle = UITextBorderStyleRoundedRect
+    @journal_search_box.textAlignment = UITextAlignmentCenter
+    @journal_search_box.placeholder = 'Type a journal title...'
+    @journal_search_box.autoCompleteDataSource = self
+    @journal_search_box.autoCompleteDelegate = self
+    @journal_search_box.setAutoCompleteTableBackgroundColor(UIColor.whiteColor)
+    @journal_search_box.delegate = self
+    @scroll_view.addSubview(@journal_search_box)
+
+    # journal add button
+    ab_frame = CGRectMake(@journal_search_box.frame.origin.x + @journal_search_box.frame.size.width, height,@scroll_view.frame.size.width * 0.2, 30)
+    @journal_add_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+    @journal_add_button.frame = ab_frame
+    @journal_add_button.setTitle('Add', forState: UIControlStateNormal)
+    @journal_add_button.addTarget(self, action: :add_journal, forControlEvents: UIControlEventTouchUpInside)
+    @scroll_view.addSubview(@journal_add_button)
 
   end
 
@@ -170,21 +190,31 @@ class NewFilterController <  UIViewController
     end
   end
 
+  # this is a bit of a hack, sorry
+  def add_journal
+    add_filter('journal')
+  end
 
-  def add_filter
+  def add_keyword
+    add_filter('keyword')
+  end
+
+  def add_filter(type)
     #puts "TC1: #{@tag_count}"
-    @search_box.resignFirstResponder
-    text = @search_box.text
-    @search_box.text = nil
+    if type == 'keyword'
+      @keyword_search_box.resignFirstResponder
+      text = @keyword_search_box.text
+      @keyword_search_box.text = nil
+    else
+      @journal_search_box.resignFirstResponder
+      text = @journal_search_box.text
+      @journal_search_box.text = nil
+    end
+
     if text.empty?
       return
     end
-    journal = Journal.where(:full).eq(text).first
-    if journal.class == Journal
-      type = 'journal'
-    else
-      type = 'keyword'
-    end
+
 
     # two labels are needed
     frame = CGRectMake(5, 5, @scroll_view.frame.size.width - 40, 0)
@@ -219,7 +249,7 @@ class NewFilterController <  UIViewController
 
     # actually add the widget
     if @widgets.length == 0
-      widget_frame = CGRectMake(5,@search_box.frame.origin.y + @search_box.size.height + 5, @width-10,total_widget_height)
+      widget_frame = CGRectMake(5,@journal_search_box.frame.origin.y + @journal_search_box.size.height + 5, @width-10,total_widget_height)
     else
       widget_frame = CGRectMake(5,@widgets.last.frame.origin.y + @widgets.last.frame.size.height + 5,@width-10,total_widget_height)
     end
@@ -258,7 +288,7 @@ class NewFilterController <  UIViewController
   end
 
   def move_widgets_up
-    starting_y = @search_box.frame.origin.y + @search_box.size.height + 5
+    starting_y = @journal_search_box.frame.origin.y + @journal_search_box.size.height + 5
     @widgets.each do |widget|
       index = @widgets.index(widget)
       frame = widget.frame
@@ -274,7 +304,7 @@ class NewFilterController <  UIViewController
   end
 
   def resize_scrollview
-    total_height = 5 + @search_box.frame.origin.y + @search_box.size.height
+    total_height = 5 + @journal_search_box.frame.origin.y + @journal_search_box.size.height
     @widgets.each do |w|
       total_height += w.frame.size.height + 5
     end
