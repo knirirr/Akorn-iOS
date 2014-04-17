@@ -6,10 +6,11 @@ class ArticleListController < UIViewController
 
     self.title = 'Articles'
     navbar_height = 64
-    table_frame = CGRectMake(0,navbar_height, self.view.bounds.size.width, self.view.bounds.size.height - navbar_height)
-    @table = UITableView.alloc.initWithFrame(table_frame)
-    @table.autoresizingMask = UIViewAutoresizingFlexibleHeight
-    self.view.addSubview(@table)
+    #table_frame = CGRectMake(0,navbar_height, self.view.bounds.size.width, self.view.bounds.size.height - navbar_height)
+    #@table = UITableView.alloc.initWithFrame(table_frame)
+    #@table.autoresizingMask = UIViewAutoresizingFlexibleHeight
+    #self.view.addSubview(@table)
+    @table = UITableView.new
     @table.dataSource = self
     @table.delegate = self
     @table.addPullToRefreshWithActionHandler(
@@ -18,6 +19,17 @@ class ArticleListController < UIViewController
         end
     )
     reload_search(@filter_id)
+
+    # investigate this to see what can be done about re-drawing the view on orientation
+    # changes; at present these are disabled, but could be re-enabled.
+    Motion::Layout.new do |layout|
+      layout.view view
+      layout.subviews "table" => @table
+      layout.metrics "top" => navbar_height, "width" => self.view.frame.size.width, "height" => self.view.frame.size.height
+      layout.vertical "|-top-[table(==height)]"
+      layout.horizontal "|[table(==width)]|"
+    end
+
 
 
     # buttons for the drawers
