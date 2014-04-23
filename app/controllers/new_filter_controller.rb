@@ -128,7 +128,7 @@ class NewFilterController <  UIViewController
       return
     end
     @widgets.each do |w|
-      hash = {'type' => '', 'id' => '', 'text' => '', 'full' => ''}
+      hash = {'type' => '', 'id' => '', 'text' => ''}
       w.subviews.each do |s|
         if s.is_a?(UILabel)
           if s.text == 'journal' or s.text == 'keyword'
@@ -139,7 +139,7 @@ class NewFilterController <  UIViewController
               hash['id'] = journal.journal_id
               hash['full'] = s.text # 'full' isn't used for keyword searches
             else
-              hash['id'] = s.text
+              hash['id'] = 'NA'
             end
             hash['text'] = s.text
           end
@@ -154,13 +154,10 @@ class NewFilterController <  UIViewController
     url = AkornTasks.url
     email = NSUserDefaults.standardUserDefaults['email']
     password = NSUserDefaults.standardUserDefaults['password']
-    query_data = {query: sending.join(',').to_s.gsub(/=>/,':').stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet)}
+    query_data = {query: sending.to_s.gsub(/=>/,':')}
     login_data = {username: email, password: password}
 
-    #puts "Hash: #{hash.to_s}"
-    puts "Sending: #{sending.join(',')}"
     puts "Sending: #{sending.to_s.gsub(/=>/,':')}"
-    puts "Sending: #{query_data}"
 
     HTTP.post("#{url}/login", {payload: login_data}) do |response|    # get the users filters
       #puts "About to get filters!"
@@ -169,12 +166,18 @@ class NewFilterController <  UIViewController
         HTTP.post("#{url}/searches", {cookie: cookie, payload: query_data}) do |response|
           if response.status_code == 200
             query_id = JSON.parse(response.body.to_str)['query_id']
-            puts "Query ID: #{query_id}"
+            #puts "Query ID: #{query_id}"
             # create a new filter locally
+            new_filter = Filter.new(:search_id => query_id, :search_terms => query_data[:query], :articles => [])
+            new_filter.save
+            #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
+            App.delegate.instance_variable_get('@fl_controller').table.reloadData
 
             # sync to get articles associated with that filter
             # this will need some sort of spinner whilst the sync takes place
 
+            # finally, exit once the filter has been created
+            cancel_action
           else
             puts "Error: #{response.status_code.to_s}"
             App.alert("Error #{response.status_code.to_s}", {cancel_button_title: 'OK', message: 'Unfortunately, your filter could not be created. This might be a problem with the server and so you may wish to email for assistance.'})

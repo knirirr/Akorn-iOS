@@ -76,13 +76,15 @@ class AkornTasks
       new_filter('all_articles',
                [{'text' => 'All articles',
                  'type' => 'All articles downloaded to this device',
-                 'term_id' => 'NA'}])
+                 'id' => 'NA'}])
+                 #'term_id' => 'NA'}])
     end
     if Filter.where(:search_id).eq('saved_articles').first.class != Filter
       new_filter('saved_articles',
                [{'text' => 'Saved articles',
                  'type' => 'Articles starred on this device',
-                 'term_id' => 'NA'}])
+                 'term' => 'NA'}])
+                 #'term_id' => 'NA'}])
     end
 
     # finally create new filters for searches which have just been synced
@@ -194,7 +196,7 @@ class AkornTasks
         # this is here to make sure the table is reloaded after each filter's articles
         # are synced; it's done this way because all the network calls are async, rather
         # than this whole class is it is in the Android app
-        #App.delegate.instance_variable_get('@al_controller').table.reloadData
+        App.delegate.instance_variable_get('@al_controller').reload_search('all_articles')
       end
     end
 

@@ -113,7 +113,7 @@ class ArticleListController < UIViewController
       end
     end
     @articles = orig_array.group_by{|h| h.published_at_date}
-    puts "Articles: #{@articles}"
+    #puts "Articles: #{@articles}"
     @table.reloadData
   end
 
