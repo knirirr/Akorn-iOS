@@ -192,11 +192,7 @@ class AkornTasks
             filter.save
           end
         })
-        #puts "Reloading!"
-        # this is here to make sure the table is reloaded after each filter's articles
-        # are synced; it's done this way because all the network calls are async, rather
-        # than this whole class is it is in the Android app
-        App.delegate.instance_variable_get('@al_controller').reload_search('all_articles')
+
       end
     end
 
@@ -267,10 +263,9 @@ class AkornTasks
 
 
         no_longer_needed = on_device - on_server
-        #puts "No longer needed: #{no_longer_needed}"
-        puts "On server: #{on_server.length}"
-        puts "On device: #{on_device.length}"
-        puts "No longer needed: #{no_longer_needed.length}"
+        #puts "On server: #{on_server.length}"
+        #puts "On device: #{on_device.length}"
+        #puts "No longer needed: #{no_longer_needed.length}"
         begin
           no_longer_needed.each do |j|
             puts "Trying to delete: #{j}"
@@ -285,6 +280,11 @@ class AkornTasks
       end
       App.delegate.instance_variable_get('@al_controller').table.reloadData
       App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
+      #puts "Reloading!"
+      # this is here to make sure the table is reloaded after each filter's articles
+      # are synced; it's done this way because all the network calls are async, rather
+      # than this whole class is it is in the Android app
+      App.delegate.instance_variable_get('@al_controller').reload_search('all_articles')
     end
   end
 

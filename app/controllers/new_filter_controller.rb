@@ -168,13 +168,18 @@ class NewFilterController <  UIViewController
             query_id = JSON.parse(response.body.to_str)['query_id']
             #puts "Query ID: #{query_id}"
             # create a new filter locally
-            new_filter = Filter.new(:search_id => query_id, :search_terms => query_data[:query], :articles => [])
+            new_filter = Filter.new(:search_id => query_id, :search_terms => sending, :articles => [])
             new_filter.save
             #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
             App.delegate.instance_variable_get('@fl_controller').table.reloadData
 
             # sync to get articles associated with that filter
             # this will need some sort of spinner whilst the sync takes place
+            #@indicator = UIActivityIndicatorView.alloc.initWithActivityIndicatorStyle(UIActivityIndicatorViewStyleWhiteLarge)
+            #@indicator.center = view.center
+            #view.addSubview(@indicator)
+            #@indicator.hidesWhenStopped = true
+            #@indicator.startAnimating
 
             # finally, exit once the filter has been created
             cancel_action

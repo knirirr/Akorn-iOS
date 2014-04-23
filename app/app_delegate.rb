@@ -39,8 +39,23 @@ class AppDelegate
     true
   end
 
-
   def applicationDidEnterBackground(application)
+    save_data
+  end
+
+  def applicationDidReceiveMemoryWarning(application)
+    save_data
+  end
+
+  def applicationWillResignActive
+    save_data
+  end
+
+  def applicationWillTerminate
+    save_data
+  end
+
+  def save_data
     Article.serialize_to_file('akorn_articles.dat')
     Filter.serialize_to_file('akorn_filters.dat')
     Journal.serialize_to_file('akorn_journals.dat')
