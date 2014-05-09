@@ -170,16 +170,20 @@ class NewFilterController <  UIViewController
             # create a new filter locally
             new_filter = Filter.new(:search_id => query_id, :search_terms => sending, :articles => [])
             new_filter.save
+            send_filter = Hash.new
+            send_filter[query_id] = new_filter.search_terms
             #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
             App.delegate.instance_variable_get('@fl_controller').table.reloadData
 
             # sync to get articles associated with that filter
             # this will need some sort of spinner whilst the sync takes place
-            #@indicator = UIActivityIndicatorView.alloc.initWithActivityIndicatorStyle(UIActivityIndicatorViewStyleWhiteLarge)
-            #@indicator.center = view.center
-            #view.addSubview(@indicator)
-            #@indicator.hidesWhenStopped = true
-            #@indicator.startAnimating
+            @indicator = UIActivityIndicatorView.alloc.initWithActivityIndicatorStyle(UIActivityIndicatorViewStyleWhiteLarge)
+            @indicator.center = view.center
+            view.addSubview(@indicator)
+            @indicator.hidesWhenStopped = true
+            @indicator.startAnimating
+            @atask = AkornTasks.new
+            @atask.fetch_articles(send_filter,@indicator)
 
             # finally, exit once the filter has been created
             cancel_action

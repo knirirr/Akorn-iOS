@@ -112,7 +112,12 @@ class ArticleListController < UIViewController
         orig_array << Article.where(:article_id).eq(aid).first
       end
     end
-    @articles = orig_array.group_by{|h| h.published_at_date}
+    # may crash here in circumstances where an old filter is hanging around -
+    # this needs to be investigated later
+    if !orig_array.nil?
+      @articles = orig_array.group_by{|h| h.published_at_date}
+    end
+
     #puts "Articles: #{@articles}"
     @table.reloadData
   end

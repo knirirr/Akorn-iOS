@@ -4,7 +4,7 @@ gem 'rake'
 # Add your dependencies here:
 
 gem 'bubble-wrap', :require => 'bubble-wrap/all'
-gem 'motion-calabash'
+#gem 'motion-calabash'
 gem 'motion-cocoapods'
 gem 'motion-settings-bundle'
 gem 'motion_model'

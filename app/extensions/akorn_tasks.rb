@@ -21,7 +21,7 @@ class AkornTasks
           filters = JSON.parse(response.body.to_str)
           if !filters.nil?
             create_filters(filters)
-            fetch_articles(filters)
+            fetch_articles(filters,nil)
             fetch_journals
           end
           # having now got the filters the articles for each can be fetched
@@ -60,7 +60,7 @@ class AkornTasks
 
   # This dodgy code should purge and re-create all filters except the two default ones
   def create_filters(filters)
-    puts "New filters: #{filters.length}"
+    #puts "New filters: #{filters.length}"
     @delete = []
     @keep = []
     Filter.all.each do |f|
@@ -122,7 +122,7 @@ class AkornTasks
   ...oh, it's a pipe!
 =end
 
-  def fetch_articles(filters)
+  def fetch_articles(filters,spinner)
     #puts 'Fetching articles!'
     url = AkornTasks.url
     articles = Article.find { |article| article.favourite != 1 }
@@ -192,7 +192,7 @@ class AkornTasks
             filter.save
           end
         })
-
+        spinner.stopAnimating if !spinner.nil?
       end
     end
 
