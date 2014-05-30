@@ -3,7 +3,9 @@ source 'https://rubygems.org'
 gem 'rake'
 # Add your dependencies here:
 
-gem 'bubble-wrap', :require => 'bubble-wrap/all'
+gem 'bubble-wrap'
+gem 'bubble-wrap-http'
+#gem 'afmotion', '~> 2.0.0.rc1'
 #gem 'motion-calabash'
 gem 'motion-cocoapods'
 gem 'motion-settings-bundle'

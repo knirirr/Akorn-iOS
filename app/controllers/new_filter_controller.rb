@@ -1,5 +1,4 @@
 class NewFilterController <  UIViewController
-  include BubbleWrap
   attr_accessor :delegate, :offset, :first_responder
 
 
@@ -10,6 +9,14 @@ class NewFilterController <  UIViewController
     view.backgroundColor = UIColor.whiteColor
     self.title = 'Add Filter'
     @width = self.view.frame.size.width
+
+    # observe changes in email and password
+    @email = NSUserDefaults.standardUserDefaults['email']
+    @password = NSUserDefaults.standardUserDefaults['password']
+    NSNotificationCenter.defaultCenter.addObserverForName(NSUserDefaultsDidChangeNotification, object:nil, queue:nil, usingBlock:lambda do |notification|
+      @email = NSUserDefaults.standardUserDefaults['email']
+      @password = NSUserDefaults.standardUserDefaults['password']
+    end)
 
     # don't want an account, or already have one? Then get rid of this modal dialog!
     leftButton = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemCancel, target: self, action: :cancel_action)
@@ -193,7 +200,7 @@ class NewFilterController <  UIViewController
           end
         end
       end
-      #sending << JSON.generate(hash)
+      #sending << BubbleWrap::JSON.generate(hash)
       sending << hash
     end
 
@@ -206,14 +213,15 @@ class NewFilterController <  UIViewController
     login_data = {username: email, password: password}
 
     puts "Sending: #{sending.to_s.gsub(/=>/,':')}"
+    SVProgressHUD.show
 
-    HTTP.post("#{url}/login", {payload: login_data}) do |response|    # get the users filters
+    BubbleWrap::HTTP.post("#{url}/login", {payload: login_data}) do |response|    # get the users filters
       #puts "About to get filters!"
       if response.ok?
         cookie = response.headers['Set-Cookie']
-        HTTP.post("#{url}/searches", {cookie: cookie, payload: query_data}) do |response|
+        BubbleWrap::HTTP.post("#{url}/searches", {cookie: cookie, payload: query_data}) do |response|
           if response.status_code == 200
-            query_id = JSON.parse(response.body.to_str)['query_id']
+            query_id = BubbleWrap::JSON.parse(response.body.to_str)['query_id']
             #puts "Query ID: #{query_id}"
             # create a new filter locally
             new_filter = Filter.new(:search_id => query_id, :search_terms => sending, :articles => [])
@@ -223,7 +231,7 @@ class NewFilterController <  UIViewController
             #App.delegate.instance_variable_get('@fl_controller').filters = Filter.all
             App.delegate.instance_variable_get('@fl_controller').table.reloadData
 
-            # sync to get articles associated with that filter
+            # sync to get articles associated with that filteG
             # this will need some sort of spinner whilst the sync takes place
             @indicator = UIActivityIndicatorView.alloc.initWithActivityIndicatorStyle(UIActivityIndicatorViewStyleWhiteLarge)
             @indicator.center = view.center
@@ -240,6 +248,7 @@ class NewFilterController <  UIViewController
             App.alert("Error #{response.status_code.to_s}", {cancel_button_title: 'OK', message: 'Unfortunately, your filter could not be created. This might be a problem with the server and so you may wish to email for assistance.'})
           end
         end
+        SVProgressHUD.dismiss
       elsif response.status_code.to_s =~ /40\d/
         App.alert('Login failed!')
         App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
@@ -248,6 +257,7 @@ class NewFilterController <  UIViewController
         App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
       end
     end
+    SVProgressHUD.dismiss
   end
 
   # this is a bit of a hack, sorry

@@ -1,24 +1,23 @@
 class AkornTasks
   attr_accessor :filter_id
-  include BubbleWrap
 
   # sync latest filters, articles and journals
-  def sync(filter_id)
+  def sync(filter_id,email,password)
     @filter_id = filter_id
     # login first
     url = AkornTasks.url
-    email = NSUserDefaults.standardUserDefaults['email']
-    password = NSUserDefaults.standardUserDefaults['password']
+    #email = NSUserDefaults.standardUserDefaults['email']
+    #password = NSUserDefaults.standardUserDefaults['password']
     data = {username: email, password: password}
     cookie = nil
 
 
-    HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
+    BubbleWrap::HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
       #puts "About to get filters!"
       if response.ok?
         cookie = response.headers['Set-Cookie']
-        HTTP.get("#{url}/searches", {cookie: @auth_cookie}) do |response|
-          filters = JSON.parse(response.body.to_str)
+        BubbleWrap::HTTP.get("#{url}/searches", {cookie: @auth_cookie}) do |response|
+          filters = BubbleWrap::JSON.parse(response.body.to_str)
           if !filters.nil?
             create_filters(filters)
             fetch_articles(filters,nil)
@@ -139,8 +138,8 @@ class AkornTasks
       end
       # fetch all the articles
       #puts "Final URL: #{article_url}"
-      HTTP.get(article_url, {cookie: @auth_cookie}) do |response|
-        #filters = JSON.parse(response.body.to_str)
+      BubbleWrap::HTTP.get(article_url, {cookie: @auth_cookie}) do |response|
+        #filters = BubbleWrap::JSON.parse(response.body.to_str)
         #puts "Body: #{response.body.to_str}"
         # authors, id, journal, abstract, link, date_published
         next if response.body.nil?
@@ -199,19 +198,21 @@ class AkornTasks
   end
 
   # this should do an async filter delete and update the filter_list_controller's table
-  def delete_filter(filter_id)
+  def delete_filter(filter_id,email,password)
     url = AkornTasks.url
-    email = NSUserDefaults.standardUserDefaults['email']
-    password = NSUserDefaults.standardUserDefaults['password']
+    #email = NSUserDefaults.standardUserDefaults['email']
+    #password = NSUserDefaults.standardUserDefaults['password']
 
     data = {username: email, password: password}
     cookie = nil
 
-    HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
+    SVProgressHUD.show
+
+    BubbleWrap::HTTP.post("#{url}/login", {payload: data}) do |response|    # get the users filters
       #puts "About to get filters!"
       if response.ok?
         cookie = response.headers['Set-Cookie']
-        HTTP.get("#{url}/remove_search?query_id=#{filter_id}", {cookie: @auth_cookie}) do |response|
+        BubbleWrap::HTTP.get("#{url}/remove_search?query_id=#{filter_id}", {cookie: @auth_cookie}) do |response|
           # success will be a code 204
           puts "Status code: #{response.status_code}"
           if response.status_code == 204
@@ -224,6 +225,7 @@ class AkornTasks
           else
             App.alert('Failed to delete filter!')
           end
+          SVProgressHUD.dismiss
         end
       elsif response.status_code.to_s =~ /40\d/
         App.alert('Login failed!')
@@ -232,6 +234,7 @@ class AkornTasks
         App.alert("Login failed with message: #{response.error_message}")
         App.delegate.instance_variable_get('@al_controller').table.pullToRefreshView.stopAnimating
       end
+      SVProgressHUD.dismiss
     end
   end
 
@@ -241,9 +244,9 @@ class AkornTasks
     on_device = Journal.all.collect {|j| j.journal_id}
     #puts "OD: #{on_device.length}"
     on_server = []
-    HTTP.get("#{url}/journals") do |response|
+    BubbleWrap::HTTP.get("#{url}/journals") do |response|
       if response.status_code == 200
-        journals = JSON.parse(response.body.to_str)
+        journals = BubbleWrap::JSON.parse(response.body.to_str)
         journals.each do |j|
           on_server << j['id']
           #puts "Journal: #{j['id']}"

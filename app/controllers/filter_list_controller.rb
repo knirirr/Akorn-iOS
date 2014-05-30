@@ -13,6 +13,13 @@ class FilterListController < UIViewController
     @filters = Filter.all
     #puts "FL controller loaded #{@filters.length} filters"
 
+    @email = NSUserDefaults.standardUserDefaults['email']
+    @password = NSUserDefaults.standardUserDefaults['password']
+    NSNotificationCenter.defaultCenter.addObserverForName(NSUserDefaultsDidChangeNotification, object:nil, queue:nil, usingBlock:lambda do |notification|
+      @email = NSUserDefaults.standardUserDefaults['email']
+      @password = NSUserDefaults.standardUserDefaults['password']
+    end)
+
     # button to add more filters
     add_button = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemAdd, target: self, action: :new_filter)
     add_button.setTintColor(UIColor.whiteColor)
@@ -67,7 +74,7 @@ class FilterListController < UIViewController
       #tableView.reloadData
       filter_id = @filters[indexPath.row].search_id
       @atask = AkornTasks.new
-      @atask.delete_filter(filter_id)
+      @atask.delete_filter(filter_id,@email,@password)
     end
   end
 

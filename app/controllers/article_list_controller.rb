@@ -4,6 +4,13 @@ class ArticleListController < UIViewController
   def viewDidLoad
     super
 
+    @email = NSUserDefaults.standardUserDefaults['email']
+    @password = NSUserDefaults.standardUserDefaults['password']
+    NSNotificationCenter.defaultCenter.addObserverForName(NSUserDefaultsDidChangeNotification, object:nil, queue:nil, usingBlock:lambda do |notification|
+      @email = NSUserDefaults.standardUserDefaults['email']
+      @password = NSUserDefaults.standardUserDefaults['password']
+    end)
+
     self.title = 'Articles'
     navbar_height = 64
     #table_frame = CGRectMake(0,navbar_height, self.view.bounds.size.width, self.view.bounds.size.height - navbar_height)
@@ -134,7 +141,7 @@ class ArticleListController < UIViewController
       self.presentViewController(nav_controller, animated: true, completion: nil)
     else
       @atask = AkornTasks.new
-      @atask.sync(@filter_id)
+      @atask.sync(@filter_id,@email,@password)
     end
   end
 
