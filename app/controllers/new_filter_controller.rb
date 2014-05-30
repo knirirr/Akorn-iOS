@@ -1,6 +1,6 @@
 class NewFilterController <  UIViewController
   include BubbleWrap
-  attr_accessor :delegate
+  attr_accessor :delegate, :offset, :first_responder
 
 
   def viewDidLoad
@@ -16,6 +16,10 @@ class NewFilterController <  UIViewController
     self.navigationItem.leftBarButtonItem  = leftButton
     rightButton = UIBarButtonItem.alloc.initWithBarButtonSystemItem(UIBarButtonSystemItemDone, target: self, action: :submit_action)
     self.navigationItem.rightBarButtonItem = rightButton
+
+    # the keyboard needs to be dismissed by tapping on the background
+    recogniser = UITapGestureRecognizer.alloc.initWithTarget(self, action:'hideKeyboard')
+    self.view.addGestureRecognizer(recogniser)
 
     # if no journals are present yet (due to not having synced) then autocomplete won't work
     @items = Journal.all.collect {|j| j.full }
@@ -57,6 +61,7 @@ class NewFilterController <  UIViewController
     @keyword_search_box.borderStyle = UITextBorderStyleRoundedRect
     @keyword_search_box.textAlignment = UITextAlignmentCenter
     @keyword_search_box.placeholder = 'Type a keyword...'
+    @keyword_search_box.delegate = self
     @scroll_view.addSubview(@keyword_search_box)
 
     # keyword add button
@@ -72,6 +77,7 @@ class NewFilterController <  UIViewController
     height = @keyword_search_box.frame.origin.y + @keyword_search_box.frame.size.height + 5
     sb_frame = CGRectMake(5,height,@scroll_view.frame.size.width * 0.8, 30)
     @journal_search_box = MLPAutoCompleteTextField.alloc.initWithFrame(sb_frame)
+    @journal_search_box.autoCompleteTableAppearsAsKeyboardAccessory = true
     @journal_search_box.borderStyle = UITextBorderStyleRoundedRect
     @journal_search_box.textAlignment = UITextAlignmentCenter
     @journal_search_box.placeholder = 'Type a journal title...'
@@ -98,19 +104,61 @@ class NewFilterController <  UIViewController
   def autoCompleteTextField(textField, didSelectAutoCompleteString: selectedString,
                                        withAutoCompleteObject: selectedObject,
                                        forRowAtIndexPath: indexPath)
+    shift_down = AkornKeyboard.shift_up(textField.frame)
+    scroll_frame = @scroll_view.frame
+    scroll_frame.origin.y += shift_down
+    if @offset
+      UIView.animateWithDuration(0.3, animations: lambda { @scroll_view.frame = scroll_frame }, completion: lambda { |finished| @offset = false })
+    end
+    @first_responder = nil
     textField.resignFirstResponder
   end
 
-
   def textFieldShouldReturn(textField)
+    shift_down = AkornKeyboard.shift_up(textField.frame)
+    scroll_frame = @scroll_view.frame
+    scroll_frame.origin.y += shift_down
+    if @offset
+      UIView.animateWithDuration(0.3, animations: lambda { @scroll_view.frame = scroll_frame }, completion: lambda { |finished| @offset = false })
+    end
+    @first_responder = nil
     textField.resignFirstResponder
+  end
+
+  def textFieldDidBeginEditing(textField)
+    @first_responder = textField
+    return if @offset
+    shift_up = AkornKeyboard.shift_up(textField.frame)
+    return if shift_up == 0
+    # grab our current frame and modify it so it's visible
+    scroll_frame = @scroll_view.frame
+    scroll_frame.origin.y -= shift_up
+
+    # animate the replacement of the current frame with the new one
+    UIView.animateWithDuration(0.3, animations: lambda { @scroll_view.frame = scroll_frame }, completion: lambda { |finished| @offset = true })
+  end
+
+  def hideKeyboard
+    if !@first_responder.nil?
+      if @offset
+        scroll_frame = @scroll_view.frame
+        shift_up = AkornKeyboard.shift_up(@first_responder.frame)
+        if shift_up != 0
+          scroll_frame.origin.y += shift_up
+          UIView.animateWithDuration(0.3, animations: lambda { @scroll_view.frame = scroll_frame },
+                                     completion: lambda { |finished| @offset = false })
+        end
+      end
+
+      @first_responder.resignFirstResponder
+      @first_responder = nil
+    end
   end
 
   def viewDidUnload
     super
     @items = []
   end
-
 
   def cancel_action
     delegate.dismiss_new_filter(self)
