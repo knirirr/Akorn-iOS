@@ -3,8 +3,7 @@ class Article
   include MotionModel::ArrayModelAdapter
   include MotionModel::Validatable
 
-  columns :id => :integer,
-          :title => :string,
+  columns :title => :string,
           :article_id => :string,
           :journal => :string,
           :link => :string,

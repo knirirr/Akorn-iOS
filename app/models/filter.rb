@@ -3,8 +3,7 @@ class Filter
   include MotionModel::ArrayModelAdapter
   include MotionModel::Validatable
 
-  columns :id => :integer,
-          :search_id => :string,
+  columns :search_id => :string,
           :search_terms => :array,
           :articles => :array
 
